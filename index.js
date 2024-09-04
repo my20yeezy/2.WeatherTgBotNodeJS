@@ -2,18 +2,29 @@ const TelegramBot = require("node-telegram-bot-api");
 const axios = require("axios");
 const { Client } = require("pg");
 const cron = require("node-cron");
+require('dotenv').config();
 
-const token = "7331644105:AAG0ejMdHwFZ8NERCfYPVT23ZllRNdbdIPY";
-const openWeatherApiKey = "07ce3ae2bb7fc9610e756a22974106ee";
+const token = process.env.TELEGRAM_BOT_TOKEN;
+const openWeatherApiKey = process.env.OPENWEATHER_API_KEY;
+const dbUrl = process.env.DATABASE_URL;
 
 const db = new Client({
-  user: "postgres",
-  host: "localhost",
-  database: "ErnieWeatherBot",
-  password: "ernie",
-  port: 5432,
+  connectionString: dbUrl,
+  ssl: {
+    rejectUnauthorized: false,
+  },
 });
-db.connect();
+// const db = new Client({
+//   user: "postgres",
+//   host: "localhost",
+//   database: "ErnieWeatherBot",
+//   password: "ernie",
+//   port: 5432,
+// });
+
+db.connect()
+  .then(() => console.log('Connected to PostgreSQL database on Railway'))
+  .catch(err => console.error('Database connection error', err));
 
 const bot = new TelegramBot(token, { polling: true });
 
