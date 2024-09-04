@@ -99,6 +99,6 @@ async function sendDailyWeatherUpdates() {
 
 
 // Schedule task to run every day at 08:30 AM
-cron.schedule("00 22 * * *", () => {
+cron.schedule("01 22 * * *", () => {
   sendDailyWeatherUpdates();
 });
