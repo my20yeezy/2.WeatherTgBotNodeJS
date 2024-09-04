@@ -1,8 +1,8 @@
+require('dotenv').config();
 const TelegramBot = require("node-telegram-bot-api");
 const axios = require("axios");
 const { Client } = require("pg");
 const cron = require("node-cron");
-require('dotenv').config();
 
 const token = process.env.TELEGRAM_BOT_TOKEN;
 const openWeatherApiKey = process.env.OPENWEATHER_API_KEY;
@@ -11,6 +11,7 @@ const dbUrl = process.env.DATABASE_URL;
 const db = new Client({
   connectionString: dbUrl,
   ssl: {
+    require: true,
     rejectUnauthorized: false,
   },
 });
@@ -26,13 +27,14 @@ db.connect()
   .then(() => console.log('Connected to PostgreSQL database on Railway'))
   .catch(err => console.error('Database connection error', err));
 
-const bot = new TelegramBot(token, { polling: true });
+const bot = new TelegramBot(process.env.TELEGRAM_BOT_TOKEN, { polling: true });
+console.log('Bot Token:', process.env.TELEGRAM_BOT_TOKEN);
 
 // Save user data in DB
 async function saveUserLocation(telegramId, latitude, longitude, city) {
   try {
     await db.query(
-      `INSERT INTO users_schema.users (telegram_id, latitude, longitude, city)
+      `INSERT INTO users3 (telegram_id, latitude, longitude, city)
        VALUES ($1, $2, $3, $4)
        ON CONFLICT (telegram_id) DO UPDATE 
        SET latitude = EXCLUDED.latitude, longitude = EXCLUDED.longitude, city = EXCLUDED.city`,
@@ -70,7 +72,7 @@ bot.on('text', async msg => {
 // Send daily weather updates
 async function sendDailyWeatherUpdates() {
   try {
-    const res = await db.query("SELECT * FROM users_schema.users");
+    const res = await db.query("SELECT * FROM users3");
     res.rows.forEach(async (user) => {
       const { telegram_id, city } = user;
 
@@ -97,6 +99,6 @@ async function sendDailyWeatherUpdates() {
 
 
 // Schedule task to run every day at 08:30 AM
-cron.schedule("30 08 * * *", () => {
+cron.schedule("00 22 * * *", () => {
   sendDailyWeatherUpdates();
 });
