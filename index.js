@@ -79,12 +79,12 @@ async function sendWeatherUpdate() {
     const res = await db.query("SELECT * FROM users3");
     res.rows.forEach(async (user) => {
       const { telegram_id, city } = user;
-
+      const encodedCity = encodeURIComponent(city);
       if (!city) return;
 
       try {
         const response = await axios.get(
-          `https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${openWeatherApiKey}`
+          `https://api.openweathermap.org/data/2.5/weather?q=${encodedCity}&appid=${openWeatherApiKey}`
         );
         const data = response.data;
         const weather = data.weather[0].description;
@@ -103,10 +103,10 @@ async function sendWeatherUpdate() {
 
 
 // Schedule tasks to weather updates
-cron.schedule("00 08 * * *", () => {
+cron.schedule("00 03 * * *", () => {
   sendWeatherUpdate();
 });
 
-cron.schedule("00 14 * * *", () => {
+cron.schedule("00 13 * * *", () => {
   sendWeatherUpdate();
 });
