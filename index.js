@@ -70,7 +70,7 @@ bot.on('text', async msg => {
 })
 
 // Send daily weather updates
-async function sendDailyWeatherUpdates() {
+async function sendWeatherUpdate() {
   try {
     const res = await db.query("SELECT * FROM users3");
     res.rows.forEach(async (user) => {
@@ -85,7 +85,7 @@ async function sendDailyWeatherUpdates() {
         const data = response.data;
         const weather = data.weather[0].description;
         const temperature = data.main.temp - 273.15;
-        const message = `Good morning! The weather in ${city} today is ${weather} with a temperature of ${temperature.toFixed(2)}°C.`;
+        const message = `Hello! The weather in ${city} now is ${weather} with a temperature of ${temperature.toFixed(2)}°C.`;
 
         bot.sendMessage(telegram_id, message);
       } catch (error) {
@@ -98,7 +98,11 @@ async function sendDailyWeatherUpdates() {
 }
 
 
-// Schedule task to run every day at 08:00 AM
+// Schedule tasks to weather updates
 cron.schedule("00 08 * * *", () => {
-  sendDailyWeatherUpdates();
+  sendWeatherUpdate();
+});
+
+cron.schedule("00 14 * * *", () => {
+  sendWeatherUpdate();
 });
