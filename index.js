@@ -69,6 +69,10 @@ bot.on('text', async msg => {
   console.log(msg);
 })
 
+bot.on('location', async msg => {
+  console.log(msg);
+})
+
 // Send daily weather updates
 async function sendWeatherUpdate() {
   try {
