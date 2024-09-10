@@ -25,7 +25,16 @@ const db = new Client({
 
 db.connect()
   .then(() => console.log('Connected to PostgreSQL database on Railway'))
-  .catch(err => console.error('Database connection error', err));
+  .catch((err) => {
+    console.error("Database connection error", err.message);
+    setTimeout(connectToDatabase, 5000);
+  });
+
+  db.on("error", (err) => {
+    console.error("Unexpected error on idle client", err);
+    db.end();
+    setTimeout(connectToDatabase, 5000);
+  });
 
 const bot = new TelegramBot(process.env.TELEGRAM_BOT_TOKEN, { polling: true });
 console.log('Bot Token:', process.env.TELEGRAM_BOT_TOKEN);
@@ -78,22 +87,24 @@ async function sendWeatherUpdate() {
   try {
     const res = await db.query("SELECT * FROM users3");
     res.rows.forEach(async (user) => {
-      const { telegram_id, city } = user;
+      const { telegram_id, latitude, longitude} = user;
       const encodedCity = encodeURIComponent(city);
       if (!city) return;
 
       try {
         const response = await axios.get(
-          `https://api.openweathermap.org/data/2.5/weather?q=${encodedCity}&appid=${openWeatherApiKey}`
+          `https://api.openweathermap.org/data/2.5/weather?lat=${latitude}&lon=${longitude}&units=metric&appid=${openWeatherApiKey}`
+          // `https://api.openweathermap.org/data/2.5/weather?q=${encodedCity}&appid=${openWeatherApiKey}`
         );
         const data = response.data;
         const weather = data.weather[0].description;
-        const temperature = data.main.temp - 273.15;
+        const temperature = data.main.temp;
+        const city = data.name;
         const message = `Hello! The weather in ${city} now is ${weather} with a temperature of ${temperature.toFixed(2)}°C.`;
 
         bot.sendMessage(telegram_id, message);
       } catch (error) {
-        console.error(`Failed to get weather data for ${city}:`, error.message);
+        console.error(`Failed to get weather data:`, error.message);
       }
     });
   } catch (err) {
