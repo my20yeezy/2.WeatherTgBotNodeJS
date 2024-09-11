@@ -88,8 +88,7 @@ async function sendWeatherUpdate() {
     const res = await db.query("SELECT * FROM users3");
     res.rows.forEach(async (user) => {
       const { telegram_id, latitude, longitude} = user;
-      const encodedCity = encodeURIComponent(city);
-      if (!city) return;
+      if (!latitude || !longitude) return;
 
       try {
         const response = await axios.get(
@@ -99,8 +98,9 @@ async function sendWeatherUpdate() {
         const data = response.data;
         const weather = data.weather[0].description;
         const temperature = data.main.temp;
+        const feels_like = data.main.feels_like;
         const city = data.name;
-        const message = `Hello! The weather in ${city} now is ${weather} with a temperature of ${temperature.toFixed(2)}°C.`;
+        const message = `Hello! The weather in ${city} now is ${weather} with a temperature of ${temperature.toFixed(2)}°C, which feels like ${feels_like}°C.`;
 
         bot.sendMessage(telegram_id, message);
       } catch (error) {
@@ -114,7 +114,7 @@ async function sendWeatherUpdate() {
 
 
 // Schedule tasks to weather updates
-cron.schedule("00 03 * * *", () => {
+cron.schedule("00 04 * * *", () => {
   sendWeatherUpdate();
 });
 
