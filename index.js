@@ -49,7 +49,7 @@ async function saveUserLocation(telegramId, latitude, longitude, city) {
        SET latitude = EXCLUDED.latitude, longitude = EXCLUDED.longitude, city = EXCLUDED.city`,
       [telegramId, latitude, longitude, city]
     );
-    console.log("User location saved/updated successfully!");
+    console.log(`User ${telegramId} location saved/updated successfully as ${city}!`);
   } catch (err) {
     console.error("Error saving user location:", err.message);
   }
@@ -64,7 +64,13 @@ bot.on("location", async (msg) => {
     const response = await axios.get(
       `http://api.openweathermap.org/geo/1.0/reverse?lat=${latitude}&lon=${longitude}&limit=1&appid=${openWeatherApiKey}`
     );
-    const city = response.data[0]?.name || "Unknown location";
+    // const city = response.data[0]?.name || "Unknown location";
+    const response_city = await axios.get(
+      `https://api.openweathermap.org/data/2.5/weather?lat=${latitude}&lon=${longitude}&units=metric&appid=${openWeatherApiKey}`
+      // `https://api.openweathermap.org/data/2.5/weather?q=${encodedCity}&appid=${openWeatherApiKey}`
+    );
+    const data = response_city.data;
+    const city = data.name;
 
     await saveUserLocation(chatId, latitude, longitude, city);
 
@@ -103,6 +109,7 @@ async function sendWeatherUpdate() {
         const message = `Hello! The weather in ${city} now is ${weather} with a temperature of ${temperature.toFixed(2)}°C, which feels like ${feels_like}°C.`;
 
         bot.sendMessage(telegram_id, message);
+        console.log(`Sent weather update "${message}" to user ${telegram_id}`);
       } catch (error) {
         console.error(`Failed to get weather data:`, error.message);
       }
@@ -114,10 +121,10 @@ async function sendWeatherUpdate() {
 
 
 // Schedule tasks to weather updates
-cron.schedule("00 04 * * *", () => {
+cron.schedule("00 03 * * *", () => {
   sendWeatherUpdate();
 });
 
-cron.schedule("00 13 * * *", () => {
-  sendWeatherUpdate();
-});
+// cron.schedule("00 13 * * *", () => {
+//   sendWeatherUpdate();
+// });
